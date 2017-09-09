@@ -1,15 +1,16 @@
-// Apply the java plugin to add support for Java
 apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin:'application'
+
+mainClassName = "codechallenge.Main"
 
 repositories {
     jcenter()
-    // search for repos in maven central 
     mavenCentral()
 }
 
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.25'
-    // use netty for dat io stuffs
     compile 'io.netty:netty-all:4.1.9.Final'
     compile 'commons-io:commons-io:1.3.2'
 
