@@ -15,6 +15,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
+import javax.xml.crypto.Data;
+
 public class Server {
 
     /** Port on which server will listen */
@@ -23,15 +25,18 @@ public class Server {
     /** Number of worker threads used to handle input */
     private final int workerThreads;
 
-    //private final ExecutorService reporterExecutor;
+    /** Executor Service to get stats on processed data */
+    private final ExecutorService reporterExecutor;
+
+    /** Netty Handler */
     private final NumberHandler numberHandler;
 
     // Server Constructor
     Server(int port, int workerThreads, String logFilePath) throws IOException {
         this.port = port;
         this.workerThreads = workerThreads;
-        numberHandler = new NumberHandler(this, logFilePath);
-        //reporterExecutor = startReporter();
+        this.numberHandler = new NumberHandler(this, logFilePath);
+        this.reporterExecutor = startReporter();
     }
 
     /**
@@ -42,12 +47,14 @@ public class Server {
     private ExecutorService startReporter() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Runnable scheduledTask = () -> {
-            String threadName = Thread.currentThread().getName();
-            System.out.println("Hello " + threadName);
-//            PeriodStats stats = inputHandler.getAndResetStats();
-//            System.out.printf(
-//                    "Received %s unique numbers, %s duplicates.  Unique total: %s\n",
-//                    stats.getUnique(), stats.getDuplicates(), stats.getUniqueTotal());
+            try {
+
+//                System.out.printf(
+//                        "Received %s unique numbers, %s duplicates.  Unique total: %s\n", data.getUnique()
+//                        , data.getDuplicates(), data.getTotal());
+            } catch (IOException exe) {
+                System.out.println(exe);
+            }
 
             System.out.flush();
         };
@@ -66,7 +73,7 @@ public class Server {
             once the boss accepts the connection and registers
             the accepted connection to the worker
         */
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreads);
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
@@ -94,6 +101,12 @@ public class Server {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
         }
+    }
+
+    void shutDown() {
+
+        // shut this guy down now and close the boss channel
+        reporterExecutor.shutdown();
     }
 
 }

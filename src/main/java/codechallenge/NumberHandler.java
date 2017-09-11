@@ -7,14 +7,19 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
 
 import java.io.IOException;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
 
 /**
 
  The number handler is a Netty handler object which handles all the
- I/O events for this application it writes all recved numbas to a
- thread safe Logger
+ I/O events for this application it writes all valid messages to the Data Processor
+
+ Keeping in mind:
+ 1) Any data that does not conform to a valid line of input should
+ be discarded and the client connection terminated immediately and without comment
+ AND
+ 2) If any connected client writes a single line with only the word "terminate" followed
+ by a server-native newline sequence, the Application must disconnect all clients
+ and perform a clean shutdown as quickly as possible
 
  */
 
@@ -22,32 +27,32 @@ import java.util.logging.Logger;
 public class NumberHandler extends ChannelInboundHandlerAdapter {
 
     private Server server;
-    private Logger logger;
-    private FileHandler file;
+    private String logFilePath;
+    private String inputStream;
 
 
     // Constructor for Handler
     NumberHandler(Server server, String logFilePath) throws IOException {
         this.server = server;
-        this.file = new FileHandler(logFilePath);
-
-        // Use the built in java logger bc i dont like log4j and this is fine
-        this.logger = Logger.getLogger("codechallenge");
-        logger.addHandler(file);
-        logger.info("Starting App..\n");
+        this.logFilePath = logFilePath;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf in = (ByteBuf) msg;
         try {
-            String inputStream = in.toString(io.netty.util.CharsetUtil.US_ASCII);
+            this.inputStream = in.toString(io.netty.util.CharsetUtil.US_ASCII);
             if (isValidData(inputStream)) {
                 // now process the data
-
+                try {
+                    processData();
+                } catch (IOException exe) {
+                    System.out.println(exe);
+                }
             } else {
                 if (isTerminated(inputStream)) {
                     // Shut that sucker down
+                    server.shutDown();
                 } else {
                     // If the data is not valid then just junk that client thread
                     ctx.close();
@@ -71,9 +76,8 @@ public class NumberHandler extends ChannelInboundHandlerAdapter {
         return input.matches("^\\d{9}\\r?\\n$");
     }
 
-    // Log the data to numbers.log
-    synchronized void log(String inputStream) {
-        logger.info(inputStream);
+    void processData() throws IOException {
+        new DataProcessor(inputStream, logFilePath).parseData();
     }
 }
 
