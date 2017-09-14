@@ -47,14 +47,15 @@ public class Server {
     private ExecutorService startReporter() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Runnable scheduledTask = () -> {
-            try {
+        try {
+            DataProcessor data = numberHandler.processData();
+            System.out.printf(
+                    "Received %s unique numbers, %s duplicates.  Unique total: %s\n", data.getUnique()
+                    , data.getDuplicates(), data.getTotal());
 
-//                System.out.printf(
-//                        "Received %s unique numbers, %s duplicates.  Unique total: %s\n", data.getUnique()
-//                        , data.getDuplicates(), data.getTotal());
-            } catch (IOException exe) {
-                System.out.println(exe);
-            }
+        } catch (IOException exe) {
+            System.out.println(exe);
+        }
 
             System.out.flush();
         };

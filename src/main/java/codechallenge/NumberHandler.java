@@ -7,6 +7,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.ReferenceCountUtil;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
 
 /**
 
@@ -29,6 +32,11 @@ public class NumberHandler extends ChannelInboundHandlerAdapter {
     private Server server;
     private String logFilePath;
     private String inputStream;
+    private Logger logger;
+
+    private AtomicInteger duplicates;
+    private AtomicInteger uniqueNumbers; // AtomicInteger
+    private HashSet<Integer> numbers; // HashSet has O(1) add and already does the dedup work for me
 
 
     // Constructor for Handler
@@ -44,11 +52,7 @@ public class NumberHandler extends ChannelInboundHandlerAdapter {
             this.inputStream = in.toString(io.netty.util.CharsetUtil.US_ASCII);
             if (isValidData(inputStream)) {
                 // now process the data
-                try {
-                    processData();
-                } catch (IOException exe) {
-                    System.out.println(exe);
-                }
+                incrementSet(inputStream);
             } else {
                 if (isTerminated(inputStream)) {
                     // Shut that sucker down
@@ -76,8 +80,34 @@ public class NumberHandler extends ChannelInboundHandlerAdapter {
         return input.matches("^\\d{9}\\r?\\n$");
     }
 
-    void processData() throws IOException {
-        new DataProcessor(inputStream, logFilePath).parseData();
+    DataProcessor processData() throws IOException {
+        return new DataProcessor(
+                this.duplicates.getAndSet(0),
+                this.uniqueNumbers.getAndSet(0),
+                this.numbers.size());
     }
+
+    void incrementSet(String inputStream) {
+        Integer input = Integer.parseInt(inputStream);
+        if (this.numbers.add(input)) {
+            // if the numbers could be added they are unique so we should log and increment unique
+            incrementNumbers();
+            // some logging func idk yet
+        } else {
+            // else we should increment duplicate count
+            incrementDuplicates();
+        }
+    }
+
+    // method to increment
+    void incrementDuplicates() {
+        this.duplicates.getAndIncrement();
+    }
+
+    // method to increment unique numbers
+    void incrementNumbers() {
+        this.uniqueNumbers.getAndIncrement();
+    }
+
 }
 
