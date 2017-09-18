@@ -1,10 +1,6 @@
 package codechallenge;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
 
 /**
  * This class will process all of the data and log it to the

@@ -7,15 +7,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-
-import javax.xml.crypto.Data;
 
 public class Server {
 
@@ -31,31 +26,37 @@ public class Server {
     /** Netty Handler */
     private final NumberHandler numberHandler;
 
+
+    /** LogData is a thread safe logger **/
+    private final LogData logData;
+
+    /** This is the channel that all the things listen to **/
+    private Channel channel;
+
+    private boolean isBound;
+
+
     // Server Constructor
     Server(int port, int workerThreads, String logFilePath) throws IOException {
         this.port = port;
         this.workerThreads = workerThreads;
-        this.numberHandler = new NumberHandler(this, logFilePath);
+        logData = new LogData(logFilePath);
+        this.numberHandler = new NumberHandler(this, logData);
         this.reporterExecutor = startReporter();
     }
 
-    /**
-     * Starts the periodic reporting thread (to STDOUT)
-     *
-     * @return The ExecutorService used to run the reporting thread.
-     */
     private ExecutorService startReporter() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Runnable scheduledTask = () -> {
-        try {
-            DataProcessor data = numberHandler.processData();
-            System.out.printf(
-                    "Received %s unique numbers, %s duplicates.  Unique total: %s\n", data.getUnique()
-                    , data.getDuplicates(), data.getTotal());
+            try {
+                DataProcessor data = numberHandler.processData();
+                System.out.printf(
+                        "Received %s unique numbers, %s duplicates.  Unique total: %s\n", data.getUnique()
+                        , data.getDuplicates(), data.getTotal());
 
-        } catch (IOException exe) {
-            System.out.println(exe);
-        }
+            } catch (IOException exe) {
+                System.out.println(exe);
+            }
 
             System.out.flush();
         };
@@ -90,11 +91,10 @@ public class Server {
 
             // Bind and start to accept incoming connections.
             ChannelFuture f = b.bind(port).sync();
+            isBound = true;
+            channel = f.channel();
 
-            // Wait until the server socket is closed.
-            // In this example, this does not happen, but you can do that to gracefully
-            // shut down your server.
-            f.channel().closeFuture().sync();
+            channel.closeFuture().sync();
         } catch (InterruptedException e) {
             System.err.println("sync() was interrupted");
             e.printStackTrace();
@@ -104,10 +104,15 @@ public class Server {
         }
     }
 
-    void shutDown() {
+    boolean isBound() {
+        return isBound;
+    }
 
+    void shutDown() {
         // shut this guy down now and close the boss channel
         reporterExecutor.shutdown();
+        channel.close();
+        isBound = false;
     }
 
 }

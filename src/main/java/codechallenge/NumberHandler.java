@@ -9,7 +9,6 @@ import io.netty.util.ReferenceCountUtil;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
 /**
 
@@ -30,26 +29,25 @@ import java.util.logging.Logger;
 public class NumberHandler extends ChannelInboundHandlerAdapter {
 
     private Server server;
-    private String logFilePath;
     private String inputStream;
-    private Logger logger;
+    private LogData logData;
 
-    private AtomicInteger duplicates;
-    private AtomicInteger uniqueNumbers; // AtomicInteger
-    private HashSet<Integer> numbers; // HashSet has O(1) add and already does the dedup work for me
+    private AtomicInteger duplicates = new AtomicInteger(0);
+    private AtomicInteger uniqueNumbers = new AtomicInteger(0); // AtomicInteger
+    private HashSet<Integer> numbers = new HashSet<>(); // HashSet has O(1) add and already does the dedup work for me
 
 
     // Constructor for Handler
-    NumberHandler(Server server, String logFilePath) throws IOException {
+    NumberHandler(Server server, LogData logData) throws IOException {
         this.server = server;
-        this.logFilePath = logFilePath;
+        this.logData = logData;
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         ByteBuf in = (ByteBuf) msg;
         try {
-            this.inputStream = in.toString(io.netty.util.CharsetUtil.US_ASCII);
+            inputStream = in.toString(io.netty.util.CharsetUtil.US_ASCII);
             if (isValidData(inputStream)) {
                 // now process the data
                 incrementSet(inputStream);
@@ -81,18 +79,22 @@ public class NumberHandler extends ChannelInboundHandlerAdapter {
     }
 
     DataProcessor processData() throws IOException {
+        // return the stats from this reporting period
         return new DataProcessor(
-                this.duplicates.getAndSet(0),
-                this.uniqueNumbers.getAndSet(0),
-                this.numbers.size());
+                // every reporting period we want to se the counts for
+                // dups and unique numbers back to 0
+                duplicates.getAndSet(0),
+                uniqueNumbers.getAndSet(0),
+                numbers.size());
     }
 
     void incrementSet(String inputStream) {
-        Integer input = Integer.parseInt(inputStream);
-        if (this.numbers.add(input)) {
+        int input = Integer.parseInt(inputStream.trim());
+        if (numbers.add(input)) {
             // if the numbers could be added they are unique so we should log and increment unique
             incrementNumbers();
-            // some logging func idk yet
+            // log dat data
+            logData.log(inputStream);
         } else {
             // else we should increment duplicate count
             incrementDuplicates();
@@ -101,12 +103,12 @@ public class NumberHandler extends ChannelInboundHandlerAdapter {
 
     // method to increment
     void incrementDuplicates() {
-        this.duplicates.getAndIncrement();
+        duplicates.getAndIncrement();
     }
 
     // method to increment unique numbers
     void incrementNumbers() {
-        this.uniqueNumbers.getAndIncrement();
+        uniqueNumbers.getAndIncrement();
     }
 
 }
