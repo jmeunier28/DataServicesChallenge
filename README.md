@@ -19,14 +19,8 @@
 
 ## Results:
 ```
-Received 10834 unique numbers, 1910 duplicates.  Unique total: 13550
-Received 11158 unique numbers, 1613 duplicates.  Unique total: 24262
-Received 11485 unique numbers, 1301 duplicates.  Unique total: 35243
-Received 11502 unique numbers, 1321 duplicates.  Unique total: 46178
-Received 11482 unique numbers, 1318 duplicates.  Unique total: 57077
-Received 11338 unique numbers, 1462 duplicates.  Unique total: 67851
-Received 11387 unique numbers, 1388 duplicates.  Unique total: 78764
-Received 11564 unique numbers, 1196 duplicates.  Unique total: 89921
-Received 11702 unique numbers, 1099 duplicates.  Unique total: 101260
-Received 11395 unique numbers, 1385 duplicates.  Unique total: 112291
+Received 20841 unique numbers, 1650 duplicates.  Unique total: 650168
+Received 51070 unique numbers, 3976 duplicates.  Unique total: 699545
+Received 50887 unique numbers, 4497 duplicates.  Unique total: 748430
 ```
+Got up to around ~51k per reporting period which is eh but i think i can tweak my test to get better results 

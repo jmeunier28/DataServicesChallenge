@@ -20,9 +20,8 @@ public class Client {
 
 
     private static void startClients() {
-        // using 100 threads in my pool to start with
         System.out.println("starting...");
-        ExecutorService executor = Executors.newFixedThreadPool(100);
+        ExecutorService executor = Executors.newFixedThreadPool(50000);
         Runnable task = () -> {
           // open a socket and send some data to it
             try {
@@ -31,7 +30,7 @@ public class Client {
                 while (true) {
                     // create ByteBuffer by wrapping the random number generator
                     socketChannel.write(ByteBuffer.wrap(generateNumbers().getBytes()));
-                    Thread.sleep(75);
+                    Thread.sleep(20);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
