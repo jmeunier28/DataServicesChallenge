@@ -14,38 +14,28 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 public class Server {
 
-    /** Port on which server will listen */
     private final int port;
-
-    /** Number of worker threads used to handle input */
-    private final int workerThreads;
-
-    /** Executor Service to get stats on processed data */
-    private final ExecutorService reporterExecutor;
+    private final int numThreads;
+    private final ExecutorService executor;
 
     /** Netty Handler */
     private final NumberHandler numberHandler;
-
-
-    /** LogData is a thread safe logger **/
     private final LogData logData;
-
-    /** This is the channel that all the things listen to **/
     private Channel channel;
 
-    private boolean isBound;
 
 
     // Server Constructor
-    Server(int port, int workerThreads, String logFilePath) throws IOException {
+    Server(int port, int numThreads, String logFilePath) throws IOException {
         this.port = port;
-        this.workerThreads = workerThreads;
+        this.numThreads = numThreads;
         logData = new LogData(logFilePath);
         this.numberHandler = new NumberHandler(this, logData);
-        this.reporterExecutor = startReporter();
+        this.executor = startExecutor();
     }
 
-    private ExecutorService startReporter() {
+    private ExecutorService startExecutor() {
+        // getting updates on the data intake by running on a dead simple scheduled executor service
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
         Runnable scheduledTask = () -> {
             try {
@@ -75,7 +65,7 @@ public class Server {
             once the boss accepts the connection and registers
             the accepted connection to the worker
         */
-        EventLoopGroup workerGroup = new NioEventLoopGroup(workerThreads);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(numThreads);
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
@@ -91,7 +81,6 @@ public class Server {
 
             // Bind and start to accept incoming connections.
             ChannelFuture f = b.bind(port).sync();
-            isBound = true;
             channel = f.channel();
 
             channel.closeFuture().sync();
@@ -104,15 +93,11 @@ public class Server {
         }
     }
 
-    boolean isBound() {
-        return isBound;
-    }
 
     void shutDown() {
         // shut this guy down now and close the boss channel
-        reporterExecutor.shutdown();
+        executor.shutdown();
         channel.close();
-        isBound = false;
     }
 
 }

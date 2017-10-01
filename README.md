@@ -17,6 +17,11 @@
 * If any connected client writes a single line with only the word "terminate" followed by a server-native newline sequence, the   Application must disconnect all clients and perform a clean shutdown as quickly as possible.
 * Clearly state all of the assumptions you made in completing the Application.
 
+## To compile/run this puppy:
+
+`gradle shadowJar`
+`java -jar build/libs/DataServCodeChallenge-all.jar`
+
 ## Results:
 ```
 Received 20841 unique numbers, 1650 duplicates.  Unique total: 650168

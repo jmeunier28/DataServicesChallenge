@@ -1,16 +1,33 @@
 apply plugin: 'java'
 apply plugin: 'idea'
-apply plugin:'application'
+apply plugin: 'com.github.johnrengelman.plugin-shadow'
 
-mainClassName = "codechallenge.Main"
+sourceCompatibility = 1.8
 
 repositories {
     jcenter()
     mavenCentral()
 }
 
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:2.0.0"
+    }
+}
+
 dependencies {
     compile 'io.netty:netty-all:4.1.9.Final'
     // 'test.useTestNG()' to your build script.
     testCompile 'junit:junit:4.12'
+}
+
+shadowJar {
+    manifest {
+        attributes 'Main-Class': 'codechallenge.Main'
+    }
 }

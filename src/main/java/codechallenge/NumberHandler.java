@@ -89,15 +89,19 @@ public class NumberHandler extends ChannelInboundHandlerAdapter {
     }
 
     void incrementSet(String inputStream) {
-        int input = Integer.parseInt(inputStream.trim());
-        if (numbers.add(input)) {
-            // if the numbers could be added they are unique so we should log and increment unique
-            incrementNumbers();
-            // log dat data
-            logData.log(inputStream);
-        } else {
-            // else we should increment duplicate count
-            incrementDuplicates();
+        try {
+            int input = Integer.parseInt(inputStream.trim());
+            if (numbers.add(input)) {
+                // if the numbers could be added they are unique so we should log and increment unique
+                incrementNumbers();
+                // log dat data
+                logData.log(inputStream);
+            } else {
+                // else we should increment duplicate count
+                incrementDuplicates();
+            }
+        } catch (NumberFormatException exe) {
+            System.out.println(exe);
         }
     }
 
