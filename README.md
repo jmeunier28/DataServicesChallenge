@@ -19,6 +19,7 @@
 ## To compile/run this puppy:
 
 `gradle shadowJar`
+
 `java -jar build/libs/DataServCodeChallenge-all.jar`
 
 ## Results:
