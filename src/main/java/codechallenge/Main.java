@@ -16,6 +16,6 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
         System.out.println("Starting up server...");
-         new Server(PORT, MAX_CONCURRENT_CLIENTS,LOG_FILE_PATH).run();
+        new Server(PORT, MAX_CONCURRENT_CLIENTS, LOG_FILE_PATH).run();
     }
 }

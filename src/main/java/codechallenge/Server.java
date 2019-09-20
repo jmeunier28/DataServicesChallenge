@@ -18,11 +18,12 @@ public class Server {
     private final int numThreads;
     private final ExecutorService executor;
 
-    /** Netty Handler */
+    /**
+     * Netty Handler
+     */
     private final NumberHandler numberHandler;
     private final LogData logData;
     private Channel channel;
-
 
 
     // Server Constructor
@@ -44,7 +45,8 @@ public class Server {
                         "Received %s unique numbers, %s duplicates.  Unique total: %s\n", data.getUnique()
                         , data.getDuplicates(), data.getTotal());
 
-            } catch (IOException exe) {
+            }
+            catch (IOException exe) {
                 System.out.println(exe);
             }
 
@@ -61,10 +63,10 @@ public class Server {
         /** Accepts an incoming connection */
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         /**
-            Handles the traffic of the accepted connection
-            once the boss accepts the connection and registers
-            the accepted connection to the worker
-        */
+         Handles the traffic of the accepted connection
+         once the boss accepts the connection and registers
+         the accepted connection to the worker
+         */
         EventLoopGroup workerGroup = new NioEventLoopGroup(numThreads);
         try {
             ServerBootstrap b = new ServerBootstrap();
@@ -77,17 +79,20 @@ public class Server {
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+                    .childOption(ChannelOption.SO_KEEPALIVE, true)
+                    .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
 
             // Bind and start to accept incoming connections.
             ChannelFuture f = b.bind(port).sync();
             channel = f.channel();
 
             channel.closeFuture().sync();
-        } catch (InterruptedException e) {
+        }
+        catch (InterruptedException e) {
             System.err.println("sync() was interrupted");
             e.printStackTrace();
-        } finally {
+        }
+        finally {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
         }
